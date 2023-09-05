@@ -1,13 +1,15 @@
+# Python Standard Library
 import os
 
-from .conf import config
+# First Party
+from raftos_plus.conf import config
 
 
 class FileDict:
     """Persistent dict-like storage on a disk accessible by obj['item_name']"""
 
     def __init__(self, filename, serializer=None):
-        self.filename = filename.replace(':', '_')
+        self.filename = filename.replace(":", "_")
         os.makedirs(os.path.dirname(self.filename), exist_ok=True)
 
         self.cache = {}
@@ -33,7 +35,7 @@ class FileDict:
                     raise KeyError
 
             except FileNotFoundError:
-                open(self.filename, 'wb').close()
+                open(self.filename, "wb").close()
                 raise KeyError
 
             else:
@@ -48,13 +50,13 @@ class FileDict:
             content = {}
 
         content.update({name: value})
-        with open(self.filename, 'wb') as f:
+        with open(self.filename, "wb") as f:
             f.write(self.serializer.pack(content))
 
         self.cache = content
 
     def _get_file_content(self):
-        with open(self.filename, 'rb') as f:
+        with open(self.filename, "rb") as f:
             content = f.read()
             if not content:
                 return {}
@@ -76,33 +78,36 @@ class Log:
     UPDATE_CACHE_EVERY = 5
 
     def __init__(self, node_id, serializer=None):
-        self.filename = os.path.join(config.log_path, '{}.log'.format(node_id.replace(':', '_')))
+        self.filename = os.path.join(
+            config.log_path, "{}.log".format(node_id.replace(":", "_"))
+        )
         os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-        open(self.filename, 'a').close()
+        open(self.filename, "a").close()
 
         self.serializer = serializer or config.serializer
         self.cache = self.read()
 
         # All States
 
-        """Volatile state on all servers: index of highest log entry known to be committed
-        (initialized to 0, increases monotonically)"""
+        """Volatile state on all servers: index of highest log entry known to
+        be committed (initialized to 0, increases monotonically)"""
         self.commit_index = 0
 
-        """Volatile state on all servers: index of highest log entry applied to state machine
-        (initialized to 0, increases monotonically)"""
+        """Volatile state on all servers: index of highest log entry applied
+        to state machine (initialized to 0, increases monotonically)"""
         self.last_applied = 0
 
         # Leaders
 
-        """Volatile state on Leaders: for each server, index of the next log entry to send to that server
-        (initialized to leader last log index + 1)
+        """Volatile state on Leaders: for each server, index of the next log
+        entry to send to that server (initialized to leader last log index + 1)
             {<follower>:  index, ...}
         """
         self.next_index = None
 
-        """Volatile state on Leaders: for each server, index of highest log entry known to be replicated on server
-        (initialized to 0, increases monotonically)
+        """Volatile state on Leaders: for each server, index of highest log
+        entry known to be replicated on server (initialized to 0, increases
+        monotonically)
             {<follower>:  index, ...}
         """
         self.match_index = None
@@ -117,12 +122,9 @@ class Log:
         return len(self.cache)
 
     def write(self, term, command):
-        with open(self.filename, 'ab') as f:
-            entry = {
-                'term': term,
-                'command': command
-            }
-            f.write(self.serializer.pack(entry) + '\n'.encode())
+        with open(self.filename, "ab") as f:
+            entry = {"term": term, "command": command}
+            f.write(self.serializer.pack(entry) + "\n".encode())
 
         self.cache.append(entry)
         if not len(self) % self.UPDATE_CACHE_EVERY:
@@ -131,16 +133,16 @@ class Log:
         return entry
 
     def read(self):
-        with open(self.filename, 'rb') as f:
+        with open(self.filename, "rb") as f:
             return [self.serializer.unpack(entry) for entry in f.readlines()]
 
     def erase_from(self, index):
-        updated = self.cache[:index - 1]
-        open(self.filename, 'wb').close()
+        updated = self.cache[: index - 1]
+        open(self.filename, "wb").close()
         self.cache = []
 
         for entry in updated:
-            self.write(entry['term'], entry['command'])
+            self.write(entry["term"], entry["command"])
 
     @property
     def last_log_index(self):
@@ -150,7 +152,7 @@ class Log:
     @property
     def last_log_term(self):
         if self.cache:
-            return self.cache[-1]['term']
+            return self.cache[-1]["term"]
 
         return 0
 
@@ -159,7 +161,9 @@ class StateMachine(FileDict):
     """Raft Replicated State Machine — dict"""
 
     def __init__(self, node_id):
-        filename = os.path.join(config.log_path, '{}.state_machine'.format(node_id))
+        filename = os.path.join(
+            config.log_path, "{}.state_machine".format(node_id)
+        )
         super().__init__(filename)
 
     def apply(self, command):
@@ -171,18 +175,19 @@ class StateMachine(FileDict):
 class FileStorage(FileDict):
     """Persistent storage
 
-    — term — latest term server has seen (initialized to 0 on first boot, increases monotonically)
+    — term — latest term server has seen (initialized to 0 on first boot,
+    increases monotonically)
     — voted_for — candidate_id that received vote in current term (or None)
     """
 
     def __init__(self, node_id):
-        filename = os.path.join(config.log_path, '{}.storage'.format(node_id))
+        filename = os.path.join(config.log_path, "{}.storage".format(node_id))
         super().__init__(filename)
 
     @property
     def term(self):
-        return self['term']
+        return self["term"]
 
     @property
     def voted_for(self):
-        return self['voted_for']
+        return self["voted_for"]

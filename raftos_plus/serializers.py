@@ -1,8 +1,11 @@
+# Third Party
 import msgpack
 
 try:
+    # Third Party
     import ujson as json
 except ImportError:
+    # Python Standard Library
     import json
 
 
@@ -24,4 +27,4 @@ class MessagePackSerializer:
 
     @staticmethod
     def unpack(data):
-        return msgpack.unpackb(data, use_list=True, encoding='utf-8')
+        return msgpack.unpackb(data, use_list=True, encoding="utf-8")

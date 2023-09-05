@@ -1,75 +1,11 @@
-# raftos
+# raftos-plus
 
-[![Build Status](https://travis-ci.org/zhebrak/raftos.svg)](https://travis-ci.org/zhebrak/raftos) [![PyPI version](https://badge.fury.io/py/raftos.svg)](http://badge.fury.io/py/raftos)
+This project is a fork of the original raftos that is unfortunately not maintained anymore. As the old version was not compatible with Python > 3.10 and upper, I decided to fork it, and make it work. You can find the original, and excellent, work here : [Original repository](https://github.com/zhebrak/raftos)
 
-Asynchronous replication framework based on [Raft Algorithm](https://raft.github.io/) for fault-tolerant distributed systems.
+At this stage it's still a WIP, and I'm actively working on improving it over the old project : 
+- Making it compatible with Python version up to 3.11 ;
+- Improving the way nodes can connect (with mTLS support) ;
+- Cleaning up the code to make it PEP8 compliant, and more readable ;
 
-![](https://raw.github.com/zhebrak/raftos/master/docs/img/raft_rsm.png)
+All this work is pretty big, as Raft is not an easy solution to put in place, so if you want to contribute, you're free to do so ! 
 
-#### Install
-
-```
-pip install raftos
-```
-
-#### Register nodes on every server
-
-```python
-import raftos
-
-
-loop.create_task(
-    raftos.register(
-        # node running on this machine
-        '127.0.0.1:8000',
-
-        # other servers
-        cluster=[
-            '127.0.0.1:8001',
-            '127.0.0.1:8002'
-        ]
-    )
-)
-loop.run_forever()
-```
-
-#### Data replication
-
-```python
-counter = raftos.Replicated(name='counter')
-data = raftos.ReplicatedDict(name='data')
-
-
-# value on a leader gets replicated to all followers
-await counter.set(42)
-await data.update({
-    'id': 337,
-    'data': {
-        'amount': 20000,
-        'created_at': '7/11/16 18:45'
-    }
-})
-```
-
-#### In case you only need consensus algorithm with leader election
-
-```python
-await raftos.wait_until_leader(current_node)
-```
-or
-```python
-if raftos.get_leader() == current_node:
-    # make request or respond to a client
-```
-or
-```python
-raftos.configure({
-    'on_leader': start,
-    'on_follower': stop
-})
-```
-
-Whenever the leader falls, someone takes its place.
-
-
-[Paper](https://raft.github.io/raft.pdf) & [Video](https://www.youtube.com/watch?v=YbZ3zDzDnrw)

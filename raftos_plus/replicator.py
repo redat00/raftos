@@ -1,17 +1,19 @@
+# Python Standard Library
 import asyncio
 import functools
 
-from .state import State
+# First Party
+from raftos_plus.state import State
 
 
 def atomic_method(func):
-
     @functools.wraps(func)
     async def wrapped(self, *args, **kwargs):
         with await self.lock:
             result = await func(self, *args, **kwargs)
 
         return result
+
     return wrapped
 
 
@@ -23,12 +25,12 @@ class Replicated:
 
     DEFAULT_VALUE = None
 
-    def __init__(self, name, default='REPLICATED_DEFAULT'):
+    def __init__(self, name, default="REPLICATED_DEFAULT"):
         self.lock = asyncio.Lock()
         self.name = name
 
         # For subclasses like ReplicatedDict
-        if default == 'REPLICATED_DEFAULT':
+        if default == "REPLICATED_DEFAULT":
             self.value = self.DEFAULT_VALUE
         else:
             self.value = default
@@ -36,7 +38,8 @@ class Replicated:
         self.in_memory = False
 
     async def get(self):
-        # If we didn't set a value in this life cycle try to get it from State Machine
+        # If we didn't set a value in this life cycle try to get it from
+        # State Machine
         if not self.in_memory:
             try:
                 self.value = await State.get_value(self.name)

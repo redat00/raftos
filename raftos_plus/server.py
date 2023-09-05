@@ -1,8 +1,9 @@
+# Python Standard Library
 import asyncio
-import functools
 
-from .network import UDPProtocol
-from .state import State
+# First Party
+from raftos_plus.network import UDPProtocol
+from raftos_plus.state import State
 
 
 async def register(*address_list, cluster=None, loop=None):
@@ -14,12 +15,12 @@ async def register(*address_list, cluster=None, loop=None):
 
     loop = loop or asyncio.get_event_loop()
     for address in address_list:
-        host, port = address.rsplit(':', 1)
+        host, port = address.rsplit(":", 1)
         node = Node(address=(host, int(port)), loop=loop)
         await node.start()
 
         for address in cluster:
-            host, port = address.rsplit(':', 1)
+            host, port = address.rsplit(":", 1)
             port = int(port)
 
             if (host, port) != (node.host, node.port):
@@ -49,12 +50,12 @@ class Node:
         protocol = UDPProtocol(
             queue=self.requests,
             request_handler=self.request_handler,
-            loop=self.loop
+            loop=self.loop,
         )
         address = self.host, self.port
         self.transport, _ = await asyncio.Task(
             self.loop.create_datagram_endpoint(protocol, local_addr=address),
-            loop=self.loop
+            loop=self.loop,
         )
         self.state.start()
 
@@ -79,15 +80,13 @@ class Node:
             destination — <str> '127.0.0.1:8000' or <tuple> (127.0.0.1, 8000)
         """
         if isinstance(destination, str):
-            host, port = destination.split(':')
+            host, port = destination.split(":")
             destination = host, int(port)
 
-        await self.requests.put({
-            'data': data,
-            'destination': destination
-        })
+        await self.requests.put({"data": data, "destination": destination})
 
     def broadcast(self, data):
-        """Sends data to all Nodes in cluster (cluster list does not contain self Node)"""
+        """Sends data to all Nodes in cluster (cluster list does not contain
+        self Node)"""
         for destination in self.cluster:
             asyncio.ensure_future(self.send(data, destination), loop=self.loop)

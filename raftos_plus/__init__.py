@@ -1,21 +1,18 @@
-from .conf import configure, config
+from .conf import config, configure
 from .replicator import Replicated, ReplicatedDict, ReplicatedList
 from .server import register, stop
 from .state import State
 
-
 __all__ = [
-    'Replicated',
-    'ReplicatedDict',
-    'ReplicatedList',
-
-    'config',
-    'configure',
-    'register',
-    'stop',
-
-    'get_leader',
-    'wait_until_leader'
+    "Replicated",
+    "ReplicatedDict",
+    "ReplicatedList",
+    "config",
+    "configure",
+    "register",
+    "stop",
+    "get_leader",
+    "wait_until_leader",
 ]
 
 

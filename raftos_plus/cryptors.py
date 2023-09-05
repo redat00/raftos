@@ -1,8 +1,11 @@
+# Python Standard Library
 import base64
 
-from .log import logger
+# First Party
+from raftos_plus.log import logger
 
 try:
+    # Third Party
     from cryptography.fernet import Fernet
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -13,7 +16,7 @@ try:
 except ImportError:
     crypto_enabled = False
 
-    logger.warning('cryptography is not installed!')
+    logger.warning("cryptography is not installed!")
 
 
 class BaseCryptor:
@@ -21,10 +24,10 @@ class BaseCryptor:
         self.config = config
 
     def encrypt(self, data):
-        raise NotImplemented
+        raise NotImplementedError
 
     def decrypt(self, data):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class Cryptor(BaseCryptor):
@@ -36,9 +39,11 @@ class Cryptor(BaseCryptor):
             length=32,
             salt=self.config.salt,
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
-        self.f = Fernet(base64.urlsafe_b64encode(kdf.derive(self.config.secret_key)))
+        self.f = Fernet(
+            base64.urlsafe_b64encode(kdf.derive(self.config.secret_key))
+        )
 
     def encrypt(self, data):
         return self.f.encrypt(data)
